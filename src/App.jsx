@@ -444,42 +444,26 @@ const getLunarDate = (date) => {
   // ============================================
   // 🔧 캘린더 함수들
   // ============================================
-  const addAnniversary = () => {
-  if (anniversaryType === 'dday') {
-    if (!anniversaryForm.name || !anniversaryForm.date) {
-      alert('이름과 날짜를 입력해주세요');
-      return;
-    }
-    setAnniversaries({ 
-      ...anniversaries, 
-      ddays: [...anniversaries.ddays, { id: Date.now(), ...anniversaryForm }] 
-    });
-    alert('D-Day가 추가되었습니다!');
-  } else if (anniversaryType === 'couple') {
-    if (!coupleForm.startDate || coupleForm.cycles.length === 0) {
-      alert('사귄 날짜와 표시 주기를 선택해주세요');
-      return;
-    }
-    setAnniversaries({ ...anniversaries, couple: coupleForm });
-    alert('커플 기념일이 저장되었습니다!');
-  } else if (anniversaryType === 'birthday') {
-    if (!anniversaryForm.name || !anniversaryForm.date) {
-      alert('이름과 날짜를 입력해주세요');
-      return;
-    }
-    setAnniversaries({ 
-      ...anniversaries, 
-      birthdays: [...anniversaries.birthdays, { id: Date.now(), ...anniversaryForm }] 
-    });
-    alert('생일이 추가되었습니다!');
-  }
-  
-  // 폼 초기화
-  setAnniversaryForm({ name: '', date: '', lunar: false });
-  setCoupleForm({ startDate: '', cycles: [] });
-  
-  // 모달 닫기
-  setAnniversaryModalOpen(false);
+const getDaysInMonth = (date) => {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  // ...
+};
+
+const getAllDatesInMonth = (date) => {
+  // ...
+};
+
+const getEventsForDate = (date) => {
+  // ...
+};
+
+const getAnniversaryColor = (anniversaryType) => {
+  return ANNIVERSARY_COLORS[anniversaryType] || '#6b7280';
+};
+
+const handleDayClick = (day) => {
+  // ...
 };
   // ============================================
   // 🔧 카테고리 함수들
