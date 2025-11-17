@@ -239,22 +239,33 @@ useEffect(() => {
     const month = selectedDate.getMonth();
     
     // 공휴일 로드
-    const holidayData = await fetchHolidays(year);
-    setHolidays(holidayData);
+    try {
+      const holidayData = await fetchHolidays(year);
+      setHolidays(holidayData);
+    } catch (error) {
+      console.error('공휴일 로드 실패:', error);
+    }
     
     // 음력 데이터 로드 (해당 월의 모든 날짜)
     const lastDay = new Date(year, month + 1, 0).getDate();
     const lunarData = {};
     
+    // 음력 데이터를 병렬로 로드 (더 빠름)
+    const lunarPromises = [];
     for (let day = 1; day <= lastDay; day++) {
       const date = new Date(year, month, day);
       const dateStr = formatDate(date);
-      const lunar = await convertSolarToLunar(dateStr);
-      if (lunar) {
-        lunarData[dateStr] = lunar;
-      }
+      lunarPromises.push(
+        convertSolarToLunar(dateStr)
+          .then(lunar => {
+            if (lunar) lunarData[dateStr] = lunar;
+          })
+          .catch(err => console.error(`음력 변환 실패 (${dateStr}):`, err))
+      );
     }
     
+    // 모든 음력 데이터 로드 완료까지 대기
+    await Promise.all(lunarPromises);
     setLunarDates(lunarData);
   };
   
