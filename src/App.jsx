@@ -527,38 +527,52 @@ const getLunarDate = (date) => {
   // 🔧 기념일 함수들
   // ============================================
   const addAnniversary = () => {
-    if (anniversaryType === 'dday') {
-      if (!anniversaryForm.name || !anniversaryForm.date) {
-        alert('이름과 날짜를 입력해주세요');
-        return;
-      }
-      setAnniversaries({ ...anniversaries, ddays: [...anniversaries.ddays, { id: Date.now(), ...anniversaryForm }] });
-    } else if (anniversaryType === 'couple') {
-      if (!coupleForm.startDate || coupleForm.cycles.length === 0) {
-        alert('사귄 날짜와 표시 주기를 선택해주세요');
-        return;
-      }
-      setAnniversaries({ ...anniversaries, couple: coupleForm });
-    } else if (anniversaryType === 'birthday') {
-      if (!anniversaryForm.name || !anniversaryForm.date) {
-        alert('이름과 날짜를 입력해주세요');
-        return;
-      }
-      setAnniversaries({ ...anniversaries, birthdays: [...anniversaries.birthdays, { id: Date.now(), ...anniversaryForm }] });
+  if (anniversaryType === 'dday') {
+    if (!anniversaryForm.name || !anniversaryForm.date) {
+      alert('이름과 날짜를 입력해주세요');
+      return;
     }
-    setAnniversaryForm({ name: '', date: '', lunar: false });
-    setCoupleForm({ startDate: '', cycles: [] });
-  };
+    setAnniversaries({ 
+      ...anniversaries, 
+      ddays: [...anniversaries.ddays, { id: Date.now(), ...anniversaryForm }] 
+    });
+    alert('D-Day가 추가되었습니다!');
+  } else if (anniversaryType === 'couple') {
+    if (!coupleForm.startDate || coupleForm.cycles.length === 0) {
+      alert('사귄 날짜와 표시 주기를 선택해주세요');
+      return;
+    }
+    setAnniversaries({ ...anniversaries, couple: coupleForm });
+    alert('커플 기념일이 저장되었습니다!');
+  } else if (anniversaryType === 'birthday') {
+    if (!anniversaryForm.name || !anniversaryForm.date) {
+      alert('이름과 날짜를 입력해주세요');
+      return;
+    }
+    setAnniversaries({ 
+      ...anniversaries, 
+      birthdays: [...anniversaries.birthdays, { id: Date.now(), ...anniversaryForm }] 
+    });
+    alert('생일이 추가되었습니다!');
+  }
   
-  const deleteAnniversary = (type, id) => {
-    if (type === 'dday') {
-      setAnniversaries({ ...anniversaries, ddays: anniversaries.ddays.filter(d => d.id !== id) });
-    } else if (type === 'couple') {
-      setAnniversaries({ ...anniversaries, couple: null });
-    } else if (type === 'birthday') {
-      setAnniversaries({ ...anniversaries, birthdays: anniversaries.birthdays.filter(b => b.id !== id) });
-    }
-  };
+  // 폼 초기화
+  setAnniversaryForm({ name: '', date: '', lunar: false });
+  setCoupleForm({ startDate: '', cycles: [] });
+  
+  // 모달 닫기
+  setAnniversaryModalOpen(false);
+};
+
+const deleteAnniversary = (type, id) => {
+  if (type === 'dday') {
+    setAnniversaries({ ...anniversaries, ddays: anniversaries.ddays.filter(d => d.id !== id) });
+  } else if (type === 'couple') {
+    setAnniversaries({ ...anniversaries, couple: null });
+  } else if (type === 'birthday') {
+    setAnniversaries({ ...anniversaries, birthdays: anniversaries.birthdays.filter(b => b.id !== id) });
+  }
+};
   
   // ============================================
   // 🔧 모달 함수들
