@@ -146,6 +146,38 @@ const checkUser = async () => {
     loadUserData(session.user);
   }
 };
+  
+// ============================================
+// 🔐 인증 상태 관리
+// ============================================
+useEffect(() => {
+  checkUser();
+  
+  const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    setUser(session?.user || null);
+    if (session?.user) {
+      loadUserData(session.user);
+    }
+  });
+  
+  return () => {
+    authListener.subscription.unsubscribe();
+  };
+}, []);
+
+// ============================================
+// 💾 데이터 자동 저장 (Supabase)
+// ============================================
+useEffect(() => {
+  if (!user) return;
+  
+  // 디바운스: 1초 후 저장
+  const timer = setTimeout(() => {
+    saveUserData(user);
+  }, 1000);
+  
+  return () => clearTimeout(timer);
+}, [events, routines, todos, completedTodos, categories, exercises, anniversaries, user]);
 
   // ============================================
   // 🔐 로그인 (Supabase)
