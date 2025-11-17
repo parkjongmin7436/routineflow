@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, CheckSquare, Settings, Plus, X, Trash2, Menu, Download, Upload, FileText, User, MoreVertical, Edit, CheckCircle2, RotateCcw, Palette, Dumbbell, Heart, Search, LogOut } from 'lucide-react';
 import { supabase, TABLES } from './lib/supabase';
-import { fetchHolidays, convertSolarToLunar } from './lib/api';
+import { fetchHolidays } from './lib/api'; // convertSolarToLunar은 사용 안 함 (음력 기능 비활성화)
 
 // ============================================
 // 🎨 메인 컴포넌트
@@ -320,11 +320,12 @@ const PlannerApp = () => {
     return `${year}-${month}-${day}`;
   };
   
-  const getLunarDate = (date) => {
-    const lunarDate = new Date(date);
-    lunarDate.setDate(lunarDate.getDate() - 28);
-    return `${lunarDate.getMonth() + 1}.${lunarDate.getDate()}`;
-  };
+// 음력 기능 임시 비활성화
+// const getLunarDate = (date) => {
+//   const lunarDate = new Date(date);
+//   lunarDate.setDate(lunarDate.getDate() - 28);
+//   return `${lunarDate.getMonth() + 1}.${lunarDate.getDate()}`;
+// };
   
   // ============================================
   // 🔧 기념일 계산 - 커플 기념일
@@ -338,7 +339,7 @@ const PlannerApp = () => {
     if (cycles.includes(100)) {
       for (let i = 1; i <= 50; i++) {
         const d = new Date(startDate);
-        d.setDate(d.getDate() + (i * 100));
+        d.setDate(d.getDate() + (i * 100 - 1));
         const key = formatDate(d);
         if (!dates[key]) dates[key] = [];
         dates[key].push({ text: `❤️ ${i * 100}일`, type: 'couple' });
@@ -348,7 +349,7 @@ const PlannerApp = () => {
     if (cycles.includes(500)) {
       for (let i = 1; i <= 20; i++) {
         const d = new Date(startDate);
-        d.setDate(d.getDate() + (i * 500));
+        d.setDate(d.getDate() + (i * 500 - 1));
         const key = formatDate(d);
         if (!dates[key]) dates[key] = [];
         dates[key].push({ text: `❤️ ${i * 500}일`, type: 'couple' });
@@ -358,7 +359,7 @@ const PlannerApp = () => {
     if (cycles.includes(1000)) {
       for (let i = 1; i <= 10; i++) {
         const d = new Date(startDate);
-        d.setDate(d.getDate() + (i * 1000));
+        d.setDate(d.getDate() + (i * 1000 - 1));
         const key = formatDate(d);
         if (!dates[key]) dates[key] = [];
         dates[key].push({ text: `❤️ ${i * 1000}일`, type: 'couple' });
@@ -1110,7 +1111,7 @@ const PlannerApp = () => {
                     const isToday = formatDate(day) === formatDate(new Date());
                     const dateStr = formatDate(day);
                     const holiday = holidays[dateStr];
-                    const lunarDate = getLunarDate(day);
+                   // const lunarDate = getLunarDate(day); // 음력 기능 임시 비활성화
                     
                     return (
                       <div key={index} onClick={() => handleDayClick(day)} className={`min-h-32 p-2 border rounded-lg cursor-pointer transition hover:bg-gray-50 bg-white ${isToday ? 'ring-2 ring-blue-500' : ''}`}>
@@ -1134,7 +1135,7 @@ const PlannerApp = () => {
                           })}
                           {dayEvents.length > 2 && <div className="text-xs text-gray-500">+{dayEvents.length - 2}개</div>}
                         </div>
-                        <div className="text-[10px] text-gray-400 mt-1">{lunarDate}</div>
+                       {/* <div className="text-[10px] text-gray-400 mt-1">{lunarDate}</div> */} {/* 음력 기능 임시 비활성화 */}
                       </div>
                     );
                   })}
