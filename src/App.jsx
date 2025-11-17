@@ -444,27 +444,54 @@ const getLunarDate = (date) => {
   // ============================================
   // 🔧 캘린더 함수들
   // ============================================
+// ============================================
+// 🔧 캘린더 함수들
+// ============================================
 const getDaysInMonth = (date) => {
   const year = date.getFullYear();
   const month = date.getMonth();
-  // ...
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+  const startingDayOfWeek = firstDay.getDay();
+  const days = [];
+  
+  for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
+  for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+  
+  return days;
 };
 
 const getAllDatesInMonth = (date) => {
-  // ...
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const dates = [];
+  for (let i = 1; i <= lastDay; i++) dates.push(new Date(year, month, i));
+  return dates;
 };
 
 const getEventsForDate = (date) => {
-  // ...
-};
-
-const getAnniversaryColor = (anniversaryType) => {
-  return ANNIVERSARY_COLORS[anniversaryType] || '#6b7280';
-};
-
-const handleDayClick = (day) => {
-  // ...
-};
+  if (!date) return [];
+  const dateStr = formatDate(date);
+  
+  const regularEvents = events.filter(e => e.date === dateStr);
+  
+  const ddayEvents = anniversaries.ddays
+    .filter(d => d.date === dateStr)
+    .map(d => ({
+      id: `dday_${d.id}`,
+      title: `📌 ${d.name}`,
+      date: d.date,
+      category: 'etc',
+      isAnniversary: true,
+      anniversaryType: 'dday'
+    }));
+  
+  const birthdayEvents = anniversaries.birthdays
+    .filter(b => {
+      const bDate = new Date(b.date);
+      return bDate.getMonth() === date.getMonth() && bDate.getDate() === date.get
   // ============================================
   // 🔧 카테고리 함수들
   // ============================================
