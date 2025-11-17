@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckSquare, Settings, Plus, X, Trash2, Menu, Download, Upload, User, MoreVertical, Edit, CheckCircle2, RotateCcw, Palette, Dumbbell, Heart, Search, LogOut } from 'lucide-react';
-import { supabase, TABLES } from './lib/supabase';
-import { fetchHolidays, convertSolarToLunar } from './lib/api';
+import { Calendar, Clock, CheckSquare, Settings, Plus, X, Trash2, Menu, Download, Upload, FileText, User, MoreVertical, Edit, CheckCircle2, RotateCcw, Palette, Dumbbell, Heart, Search, LogOut } from 'lucide-react';
+import { supabase, TABLES } from '../lib/supabase';
 
 // ============================================
 // 🎨 메인 컴포넌트
@@ -62,8 +61,8 @@ const PlannerApp = () => {
     hobby: { name: '취미', hexColor: '#f59e0b' },
     etc: { name: '기타', hexColor: '#6b7280' }
   });
-  const [holidays, setHolidays] = useState({});
-  const [lunarDates, setLunarDates] = useState({});
+  const [holidayApiKey] = useState('5b1eb4b16c1166d4845f8a6414fbab9bd5fb41cba7b438006d97abdb655bbc01');
+  const [holidays] = useState({});
   
   // ============================================
   // 📊 STATE 관리 - 폼 데이터
@@ -231,54 +230,12 @@ const PlannerApp = () => {
   };
   
   // ============================================
-// 🎯 공휴일 & 음력 데이터 로드
-// ============================================
-useEffect(() => {
-  const loadMonthData = async () => {
-    const year = selectedDate.getFullYear();
-    const month = selectedDate.getMonth();
-    
-    // 공휴일 로드
-    try {
-      const holidayData = await fetchHolidays(year);
-      setHolidays(holidayData);
-    } catch (error) {
-      console.error('공휴일 로드 실패:', error);
-    }
-    
-    // 음력 데이터 로드 (해당 월의 모든 날짜)
-    const lastDay = new Date(year, month + 1, 0).getDate();
-    const lunarData = {};
-    
-    // 음력 데이터를 병렬로 로드 (더 빠름)
-    const lunarPromises = [];
-    for (let day = 1; day <= lastDay; day++) {
-      const date = new Date(year, month, day);
-      const dateStr = formatDate(date);
-      lunarPromises.push(
-        convertSolarToLunar(dateStr)
-          .then(lunar => {
-            if (lunar) lunarData[dateStr] = lunar;
-          })
-          .catch(err => console.error(`음력 변환 실패 (${dateStr}):`, err))
-      );
-    }
-    
-    // 모든 음력 데이터 로드 완료까지 대기
-    await Promise.all(lunarPromises);
-    setLunarDates(lunarData);
-  };
-  
-  loadMonthData();
-}, [selectedDate]);
-  // ============================================
   // 🔄 루틴 → 할일 자동 변환
   // ============================================
   useEffect(() => {
     if (!user) return;
     generateTodosFromRoutines();
   }, [routines, exercises, user]);
-  
   // ============================================
   // 🔧 핵심 기능 - 루틴 → 할일 자동 생성
   // ============================================
@@ -362,63 +319,63 @@ useEffect(() => {
     return `${year}-${month}-${day}`;
   };
   
-const getLunarDate = (date) => {
-  const dateStr = formatDate(date);
-  return lunarDates[dateStr] || '';
-};
+  const getLunarDate = (date) => {
+    const lunarDate = new Date(date);
+    lunarDate.setDate(lunarDate.getDate() - 28);
+    return `${lunarDate.getMonth() + 1}.${lunarDate.getDate()}`;
+  };
   
   // ============================================
   // 🔧 기념일 계산 - 커플 기념일
   // ============================================
   const calculateCoupleDates = () => {
-  if (!anniversaries.couple || !anniversaries.couple.startDate) return {};
-  const dates = {};
-  const [year, month, day] = anniversaries.couple.startDate.split('-');
-  const startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  const cycles = anniversaries.couple.cycles || [];
-  
-  if (cycles.includes(100)) {
-    for (let i = 1; i <= 50; i++) {
-      const d = new Date(startDate);
-      d.setDate(d.getDate() + (i * 100 - 1));  // ← 수정!
-      const key = formatDate(d);
-      if (!dates[key]) dates[key] = [];
-      dates[key].push({ text: `❤️ ${i * 100}일`, type: 'couple' });
+    if (!anniversaries.couple || !anniversaries.couple.startDate) return {};
+    const dates = {};
+    const startDate = new Date(anniversaries.couple.startDate);
+    const cycles = anniversaries.couple.cycles || [];
+    
+    if (cycles.includes(100)) {
+      for (let i = 1; i <= 50; i++) {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + (i * 100));
+        const key = formatDate(d);
+        if (!dates[key]) dates[key] = [];
+        dates[key].push({ text: `❤️ ${i * 100}일`, type: 'couple' });
+      }
     }
-  }
-  
-  if (cycles.includes(500)) {
-    for (let i = 1; i <= 20; i++) {
-      const d = new Date(startDate);
-      d.setDate(d.getDate() + (i * 500 - 1));  // ← 수정!
-      const key = formatDate(d);
-      if (!dates[key]) dates[key] = [];
-      dates[key].push({ text: `❤️ ${i * 500}일`, type: 'couple' });
+    
+    if (cycles.includes(500)) {
+      for (let i = 1; i <= 20; i++) {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + (i * 500));
+        const key = formatDate(d);
+        if (!dates[key]) dates[key] = [];
+        dates[key].push({ text: `❤️ ${i * 500}일`, type: 'couple' });
+      }
     }
-  }
-  
-  if (cycles.includes(1000)) {
-    for (let i = 1; i <= 10; i++) {
-      const d = new Date(startDate);
-      d.setDate(d.getDate() + (i * 1000 - 1));  // ← 수정!
-      const key = formatDate(d);
-      if (!dates[key]) dates[key] = [];
-      dates[key].push({ text: `❤️ ${i * 1000}일`, type: 'couple' });
+    
+    if (cycles.includes(1000)) {
+      for (let i = 1; i <= 10; i++) {
+        const d = new Date(startDate);
+        d.setDate(d.getDate() + (i * 1000));
+        const key = formatDate(d);
+        if (!dates[key]) dates[key] = [];
+        dates[key].push({ text: `❤️ ${i * 1000}일`, type: 'couple' });
+      }
     }
-  }
-  
-  if (cycles.includes('yearly')) {
-    for (let i = 1; i <= 50; i++) {
-      const d = new Date(startDate);
-      d.setFullYear(d.getFullYear() + i);
-      const key = formatDate(d);
-      if (!dates[key]) dates[key] = [];
-      dates[key].push({ text: `❤️ ${i}주년`, type: 'couple' });
+    
+    if (cycles.includes('yearly')) {
+      for (let i = 1; i <= 50; i++) {
+        const d = new Date(startDate);
+        d.setFullYear(d.getFullYear() + i);
+        const key = formatDate(d);
+        if (!dates[key]) dates[key] = [];
+        dates[key].push({ text: `❤️ ${i}주년`, type: 'couple' });
+      }
     }
-  }
-  
-  return dates;
-};
+    
+    return dates;
+  };
   
   // ============================================
   // 🔧 기념일 계산 - D-Day 카운트다운
@@ -444,54 +401,86 @@ const getLunarDate = (date) => {
   // ============================================
   // 🔧 캘린더 함수들
   // ============================================
-// ============================================
-// 🔧 캘린더 함수들
-// ============================================
-const getDaysInMonth = (date) => {
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const daysInMonth = lastDay.getDate();
-  const startingDayOfWeek = firstDay.getDay();
-  const days = [];
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    const days = [];
+    
+    for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+    
+    return days;
+  };
   
-  for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
-  for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+  const getAllDatesInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const dates = [];
+    for (let i = 1; i <= lastDay; i++) dates.push(new Date(year, month, i));
+    return dates;
+  };
   
-  return days;
-};
-
-const getAllDatesInMonth = (date) => {
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  const lastDay = new Date(year, month + 1, 0).getDate();
-  const dates = [];
-  for (let i = 1; i <= lastDay; i++) dates.push(new Date(year, month, i));
-  return dates;
-};
-
-const getEventsForDate = (date) => {
-  if (!date) return [];
-  const dateStr = formatDate(date);
-  
-  const regularEvents = events.filter(e => e.date === dateStr);
-  
-  const ddayEvents = anniversaries.ddays
-    .filter(d => d.date === dateStr)
-    .map(d => ({
-      id: `dday_${d.id}`,
-      title: `📌 ${d.name}`,
-      date: d.date,
+  const getEventsForDate = (date) => {
+    if (!date) return [];
+    const dateStr = formatDate(date);
+    
+    const regularEvents = events.filter(e => e.date === dateStr);
+    
+    const ddayEvents = anniversaries.ddays
+      .filter(d => d.date === dateStr)
+      .map(d => ({
+        id: `dday_${d.id}`,
+        title: `📌 ${d.name}`,
+        date: d.date,
+        category: 'etc',
+        isAnniversary: true,
+        anniversaryType: 'dday'
+      }));
+    
+    const birthdayEvents = anniversaries.birthdays
+      .filter(b => {
+        const bDate = new Date(b.date);
+        return bDate.getMonth() === date.getMonth() && bDate.getDate() === date.getDate();
+      })
+      .map(b => ({
+        id: `birthday_${b.id}`,
+        title: `🎂 ${b.name}`,
+        date: dateStr,
+        category: 'etc',
+        isAnniversary: true,
+        anniversaryType: 'birthday'
+      }));
+    
+    const coupleDates = calculateCoupleDates();
+    const coupleEvents = (coupleDates[dateStr] || []).map((evt, idx) => ({
+      id: `couple_${dateStr}_${idx}`,
+      title: evt.text,
+      date: dateStr,
       category: 'etc',
       isAnniversary: true,
-      anniversaryType: 'dday'
+      anniversaryType: 'couple'
     }));
+    
+    return [...regularEvents, ...ddayEvents, ...birthdayEvents, ...coupleEvents];
+  };
   
-  const birthdayEvents = anniversaries.birthdays
-    .filter(b => {
-      const bDate = new Date(b.date);
-      return bDate.getMonth() === date.getMonth() && bDate.getDate() === date.get
+  const getAnniversaryColor = (anniversaryType) => {
+    return ANNIVERSARY_COLORS[anniversaryType] || '#6b7280';
+  };
+  
+  const handleDayClick = (day) => {
+    setSelectedDate(day);
+    const dayEvents = getEventsForDate(day);
+    setSelectedDayEvents(dayEvents);
+    setSelectedDayDate(day);
+    setDayDetailModalOpen(true);
+  };
+  
   // ============================================
   // 🔧 카테고리 함수들
   // ============================================
@@ -538,52 +527,38 @@ const getEventsForDate = (date) => {
   // 🔧 기념일 함수들
   // ============================================
   const addAnniversary = () => {
-  if (anniversaryType === 'dday') {
-    if (!anniversaryForm.name || !anniversaryForm.date) {
-      alert('이름과 날짜를 입력해주세요');
-      return;
+    if (anniversaryType === 'dday') {
+      if (!anniversaryForm.name || !anniversaryForm.date) {
+        alert('이름과 날짜를 입력해주세요');
+        return;
+      }
+      setAnniversaries({ ...anniversaries, ddays: [...anniversaries.ddays, { id: Date.now(), ...anniversaryForm }] });
+    } else if (anniversaryType === 'couple') {
+      if (!coupleForm.startDate || coupleForm.cycles.length === 0) {
+        alert('사귄 날짜와 표시 주기를 선택해주세요');
+        return;
+      }
+      setAnniversaries({ ...anniversaries, couple: coupleForm });
+    } else if (anniversaryType === 'birthday') {
+      if (!anniversaryForm.name || !anniversaryForm.date) {
+        alert('이름과 날짜를 입력해주세요');
+        return;
+      }
+      setAnniversaries({ ...anniversaries, birthdays: [...anniversaries.birthdays, { id: Date.now(), ...anniversaryForm }] });
     }
-    setAnniversaries({ 
-      ...anniversaries, 
-      ddays: [...anniversaries.ddays, { id: Date.now(), ...anniversaryForm }] 
-    });
-    alert('D-Day가 추가되었습니다!');
-  } else if (anniversaryType === 'couple') {
-    if (!coupleForm.startDate || coupleForm.cycles.length === 0) {
-      alert('사귄 날짜와 표시 주기를 선택해주세요');
-      return;
-    }
-    setAnniversaries({ ...anniversaries, couple: coupleForm });
-    alert('커플 기념일이 저장되었습니다!');
-  } else if (anniversaryType === 'birthday') {
-    if (!anniversaryForm.name || !anniversaryForm.date) {
-      alert('이름과 날짜를 입력해주세요');
-      return;
-    }
-    setAnniversaries({ 
-      ...anniversaries, 
-      birthdays: [...anniversaries.birthdays, { id: Date.now(), ...anniversaryForm }] 
-    });
-    alert('생일이 추가되었습니다!');
-  }
+    setAnniversaryForm({ name: '', date: '', lunar: false });
+    setCoupleForm({ startDate: '', cycles: [] });
+  };
   
-  // 폼 초기화
-  setAnniversaryForm({ name: '', date: '', lunar: false });
-  setCoupleForm({ startDate: '', cycles: [] });
-  
-  // 모달 닫기
-  setAnniversaryModalOpen(false);
-};
-
-const deleteAnniversary = (type, id) => {
-  if (type === 'dday') {
-    setAnniversaries({ ...anniversaries, ddays: anniversaries.ddays.filter(d => d.id !== id) });
-  } else if (type === 'couple') {
-    setAnniversaries({ ...anniversaries, couple: null });
-  } else if (type === 'birthday') {
-    setAnniversaries({ ...anniversaries, birthdays: anniversaries.birthdays.filter(b => b.id !== id) });
-  }
-};
+  const deleteAnniversary = (type, id) => {
+    if (type === 'dday') {
+      setAnniversaries({ ...anniversaries, ddays: anniversaries.ddays.filter(d => d.id !== id) });
+    } else if (type === 'couple') {
+      setAnniversaries({ ...anniversaries, couple: null });
+    } else if (type === 'birthday') {
+      setAnniversaries({ ...anniversaries, birthdays: anniversaries.birthdays.filter(b => b.id !== id) });
+    }
+  };
   
   // ============================================
   // 🔧 모달 함수들
@@ -650,7 +625,6 @@ const deleteAnniversary = (type, id) => {
     }
     closeModal();
   };
-  
   // ============================================
   // 🔧 할일 함수들
   // ============================================
@@ -946,7 +920,7 @@ const deleteAnniversary = (type, id) => {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
-          <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">📅 RoutineFlow</h1>
+          <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">📅 플래너</h1>
           
           <div className="flex gap-2 mb-6">
             <button
@@ -990,9 +964,8 @@ const deleteAnniversary = (type, id) => {
       </div>
     );
   }
-
   // ============================================
-  // 🎨 메인 앱 렌더링 시작
+  // 🎨 메인 앱 렌더링
   // ============================================
   return (
     <div className="flex h-screen bg-gray-50">
@@ -1000,7 +973,7 @@ const deleteAnniversary = (type, id) => {
       <div className={`${sidebarOpen ? 'w-64' : 'w-0'} bg-white border-r border-gray-200 transition-all duration-300 overflow-hidden`}>
         <div className="p-4">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-xl font-bold text-gray-800">RoutineFlow</h1>
+            <h1 className="text-xl font-bold text-gray-800">플래너</h1>
             <button onClick={handleLogout} className="p-2 hover:bg-gray-100 rounded-lg" title="로그아웃">
               <LogOut size={18} />
             </button>
@@ -1210,8 +1183,7 @@ const deleteAnniversary = (type, id) => {
               </div>
             </div>
           )}
-
-          {/* 루틴 탭 */}
+         {/* 루틴 탭 */}
           {activeTab === 'routine' && (
             <div className="max-w-6xl mx-auto space-y-8">
               {/* 오늘의 루틴 */}
@@ -1279,10 +1251,73 @@ const deleteAnniversary = (type, id) => {
                 </div>
               </div>
               
-              {/* 월간/연간 루틴 생략 - 파일이 너무 길어서 */}
+              {/* 월간 루틴 */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h3 className="text-lg font-semibold mb-6">월간 루틴</h3>
+                {(() => {
+                  const monthlyRoutines = getMonthlyRoutines();
+                  const filteredRoutines = filterBySearch(monthlyRoutines, ['title', 'description']);
+                  
+                  return filteredRoutines.length === 0 ? (
+                    <p className="text-center py-8 text-gray-500">
+                      {searchQuery ? '검색 결과가 없습니다' : '등록된 월간 루틴이 없습니다'}
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredRoutines.map(routine => (
+                        <div key={routine.id} className="p-4 rounded-lg border-l-4 border border-gray-200 flex items-center justify-between" style={{ borderLeftColor: categories[routine.category]?.hexColor || '#6b7280' }}>
+                          <div className="flex-1">
+                            <div className="font-medium" style={{ color: categories[routine.category]?.hexColor || '#6b7280' }}>
+                              {routine.title}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              매월 {routine.monthOption === 'lastDay' ? '마지막 날' : `${routine.monthDate}일`}
+                              {routine.time && ` • ${routine.time}`}
+                            </div>
+                          </div>
+                          <ThreeDotsMenu type="routine" item={routine} />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+              
+              {/* 연간 루틴 */}
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h3 className="text-lg font-semibold mb-6">연간 루틴</h3>
+                {(() => {
+                  const yearlyRoutines = getYearlyRoutines();
+                  const filteredRoutines = filterBySearch(yearlyRoutines, ['title', 'description']);
+                  
+                  return filteredRoutines.length === 0 ? (
+                    <p className="text-center py-8 text-gray-500">
+                      {searchQuery ? '검색 결과가 없습니다' : '등록된 연간 루틴이 없습니다'}
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {filteredRoutines.map(routine => (
+                        <div key={routine.id} className="p-4 rounded-lg border-l-4 border border-gray-200 flex items-center justify-between" style={{ borderLeftColor: categories[routine.category]?.hexColor || '#6b7280' }}>
+                          <div className="flex-1">
+                            <div className="font-medium" style={{ color: categories[routine.category]?.hexColor || '#6b7280' }}>
+                              {routine.title}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              매년 {routine.yearMonth}월
+                              {routine.time && ` • ${routine.time}`}
+                            </div>
+                          </div>
+                          <ThreeDotsMenu type="routine" item={routine} />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           )}
-{/* 할일 탭 */}
+          
+          {/* 할일 탭 */}
           {activeTab === 'todo' && (
             <div className="max-w-4xl mx-auto">
               <div className="flex gap-2 mb-6">
@@ -1296,6 +1331,39 @@ const deleteAnniversary = (type, id) => {
               
               {todoSubTab === 'active' ? (
                 <div className="space-y-6">
+                  {/* 지난 할일 */}
+                  {(() => {
+                    const overdueTodos = getOverdueTodos();
+                    const filteredTodos = filterBySearch(overdueTodos, ['title', 'description']);
+                    return filteredTodos.length > 0 && (
+                      <div className="bg-white rounded-xl shadow-sm overflow-hidden border-2 border-red-500">
+                        <div className="border-b border-red-200 px-6 py-4">
+                          <h3 className="font-semibold text-red-600">지난 할 일</h3>
+                        </div>
+                        <div className="p-4 space-y-2">
+                          {filteredTodos.map(todo => (
+                            <div key={todo.id} className="flex items-center gap-3 p-3 rounded-lg border">
+                              <input type="checkbox" onChange={() => toggleComplete(todo.id)} className="w-5 h-5" />
+                              <div className="flex-1">
+                                <div className="font-medium flex items-center gap-2">
+                                  {todo.isFromRoutine && <span className="text-blue-600">🔁</span>}
+                                  {todo.title}
+                                </div>
+                                <div className="text-xs text-red-500">기한: {todo.date}</div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {todo.priority === 'high' && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
+                                {todo.priority === 'medium' && <span className="w-2 h-2 rounded-full bg-yellow-500"></span>}
+                                {todo.priority === 'low' && <span className="w-2 h-2 rounded-full bg-green-500"></span>}
+                                <ThreeDotsMenu type="todo" item={todo} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  
                   {/* 오늘 할일 */}
                   <div className="bg-white rounded-xl shadow-sm overflow-hidden border-2 border-blue-500">
                     <div className="border-b border-blue-200 px-6 py-4">
@@ -1328,6 +1396,87 @@ const deleteAnniversary = (type, id) => {
                               </div>
                             </div>
                           ))
+                        );
+                      })()}
+                    </div>
+                  </div>
+                  
+                  {/* 내일 할일 */}
+                  <div className="bg-white rounded-xl shadow-sm overflow-hidden border-2 border-green-500">
+                    <div className="border-b border-green-200 px-6 py-4">
+                      <h3 className="font-semibold text-green-600">내일</h3>
+                    </div>
+                    <div className="p-4 space-y-2">
+                      {(() => {
+                        const tomorrowTodos = getTomorrowTodos();
+                        const filteredTodos = filterBySearch(tomorrowTodos, ['title', 'description']);
+                        return filteredTodos.length === 0 ? (
+                          <p className="text-center py-6 text-gray-400">
+                            {searchQuery ? '검색 결과가 없습니다' : '내일 할 일이 없습니다'}
+                          </p>
+                        ) : (
+                          filteredTodos.map(todo => (
+                            <div key={todo.id} className="flex items-center gap-3 p-3 rounded-lg border">
+                              <input type="checkbox" onChange={() => toggleComplete(todo.id)} className="w-5 h-5" />
+                              <div className="flex-1">
+                                <div className="font-medium flex items-center gap-2">
+                                  {todo.isFromRoutine && <span className="text-blue-600">🔁</span>}
+                                  {todo.title}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {todo.priority === 'high' && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
+                                {todo.priority === 'medium' && <span className="w-2 h-2 rounded-full bg-yellow-500"></span>}
+                                {todo.priority === 'low' && <span className="w-2 h-2 rounded-full bg-green-500"></span>}
+                                <ThreeDotsMenu type="todo" item={todo} />
+                              </div>
+                            </div>
+                          ))
+                        );
+                      })()}
+                    </div>
+                  </div>
+                  
+                  {/* 예정 할일 */}
+                  <div className="bg-white rounded-xl shadow-sm overflow-hidden border-2 border-purple-500">
+                    <div className="border-b border-purple-200 px-6 py-4">
+                      <h3 className="font-semibold text-purple-600">예정</h3>
+                    </div>
+                    <div className="p-4">
+                      {(() => {
+                        const upcomingTodos = getUpcomingTodos();
+                        const filteredTodos = filterBySearch(upcomingTodos, ['title', 'description']);
+                        return filteredTodos.length === 0 ? (
+                          <p className="text-center py-6 text-gray-400">
+                            {searchQuery ? '검색 결과가 없습니다' : '예정된 할 일이 없습니다'}
+                          </p>
+                        ) : (
+                          <div className="space-y-4">
+                            {Object.entries(groupTodosByDate(filteredTodos)).map(([date, todos]) => (
+                              <div key={date}>
+                                <div className="text-xs font-medium text-gray-500 mb-2">{date}</div>
+                                <div className="space-y-2">
+                                  {todos.map(todo => (
+                                    <div key={todo.id} className="flex items-center gap-3 p-3 rounded-lg border">
+                                      <input type="checkbox" onChange={() => toggleComplete(todo.id)} className="w-5 h-5" />
+                                      <div className="flex-1">
+                                        <div className="font-medium flex items-center gap-2">
+                                          {todo.isFromRoutine && <span className="text-blue-600">🔁</span>}
+                                          {todo.title}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {todo.priority === 'high' && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
+                                        {todo.priority === 'medium' && <span className="w-2 h-2 rounded-full bg-yellow-500"></span>}
+                                        {todo.priority === 'low' && <span className="w-2 h-2 rounded-full bg-green-500"></span>}
+                                        <ThreeDotsMenu type="todo" item={todo} />
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         );
                       })()}
                     </div>
@@ -1390,6 +1539,17 @@ const deleteAnniversary = (type, id) => {
                     <input type="file" accept=".json" onChange={handleRestore} className="hidden" />
                   </label>
                 </div>
+              </div>
+              
+              <div className="bg-white rounded-lg shadow-sm p-6">
+                <h3 className="text-lg font-semibold mb-4">관리자 모드</h3>
+                {isAdmin ? (
+                  <div className="text-green-600">✓ 관리자 모드 활성화</div>
+                ) : (
+                  <button onClick={() => setAdminModalOpen(true)} className="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition">
+                    관리자 로그인
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -1509,6 +1669,32 @@ const deleteAnniversary = (type, id) => {
           </div>
         </div>
       )}
+      
+      {/* 관리자 로그인 모달 */}
+      {adminModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">관리자 로그인</h3>
+              <button onClick={() => setAdminModalOpen(false)} className="p-1 hover:bg-gray-100 rounded">
+                <X size={20} />
+              </button>
+            </div>
+            <input
+              type="password"
+              placeholder="관리자 비밀번호"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
+              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+            />
+            <button onClick={handleAdminLogin} className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+              로그인
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* 카테고리 관리 모달 */}
       {categoryModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
