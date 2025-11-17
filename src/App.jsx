@@ -371,10 +371,11 @@ const getLunarDate = (date) => {
   // 🔧 기념일 계산 - 커플 기념일
   // ============================================
   const calculateCoupleDates = () => {
-    if (!anniversaries.couple || !anniversaries.couple.startDate) return {};
-    const dates = {};
-    const startDate = new Date(anniversaries.couple.startDate);
-    const cycles = anniversaries.couple.cycles || [];
+  if (!anniversaries.couple || !anniversaries.couple.startDate) return {};
+  const dates = {};
+  const [year, month, day] = anniversaries.couple.startDate.split('-');
+  const startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  const cycles = anniversaries.couple.cycles || [];
     
     if (cycles.includes(100)) {
       for (let i = 1; i <= 50; i++) {
