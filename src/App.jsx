@@ -122,15 +122,31 @@ const PlannerApp = () => {
   // ============================================
   // 🔐 인증 체크 (Supabase)
   // ============================================
-  const checkUser = async () => {
+useEffect(() => {
+  checkUser();
+  
+  const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    setUser(session?.user || null);
+    if (session?.user) {
+      loadUserData(session.user);
+    }
+  });
+  
+  return () => {
+    authListener.subscription.unsubscribe();
+  };
+}, []);
+
+const checkUser = async () => {
   const { data: { session } } = await supabase.auth.getSession();
   setUser(session?.user || null);
-  if (session?.user) {
-    await loadUserData(session.user);  // 👈 user를 직접 전달
-  }
   setLoading(false);
-};
   
+  if (session?.user) {
+    loadUserData(session.user);
+  }
+};
+
   // ============================================
   // 🔐 로그인 (Supabase)
   // ============================================
