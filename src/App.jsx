@@ -1267,47 +1267,48 @@ const loadUserData = async (currentUser = user) => {  // 👈 파라미터 추�
               </div>
               
               {/* 일정 목록 */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
-                <h4 className="font-semibold mb-4 text-lg">{selectedDate.getFullYear()}년 {monthNames[selectedDate.getMonth()]} 일정 목록</h4>
-                <div className="space-y-3">
-                  {filterBySearch(getAllDatesInMonth(selectedDate), []).map(date => {
-                    const dateStr = formatDate(date);
-                    const dayEvents = getEventsForDate(date);
-                    const filteredEvents = filterBySearch(dayEvents, ['title', 'description']);
-                    const isToday = dateStr === formatDate(new Date());
-                    
-                    if (searchQuery && filteredEvents.length === 0) return null;
-                    
-                    return (
-                      <div key={dateStr} className={`p-4 rounded-lg border-2 cursor-pointer hover:shadow-md transition ${isToday ? 'border-blue-500' : 'border-gray-200'}`} onClick={() => handleDayClick(date)}>
-                        <div className={`font-medium mb-2 ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>
-                          {date.getMonth() + 1}월 {date.getDate()}일 ({weekDays[date.getDay()]})
-                          {isToday && <span className="ml-2 text-sm bg-blue-600 text-white px-2 py-0.5 rounded">오늘</span>}
-                        </div>
-                        {filteredEvents.length === 0 ? (
-                          <p className="text-sm text-gray-500">일정이 없습니다</p>
-                        ) : (
-                          <div className="flex gap-2 flex-wrap">
-                            {filteredEvents.slice(0, 3).map(event => {
-                              const eventColor = event.isAnniversary 
-                                ? getAnniversaryColor(event.anniversaryType)
-                                : categories[event.category]?.hexColor || '#6b7280';
-                              
-                              return (
-                                <span key={event.id} className="text-xs px-2 py-1 rounded border" style={{ borderColor: eventColor, color: eventColor }}>
-                                  {event.title}
-                                </span>
-                              );
-                            })}
-                            {filteredEvents.length > 3 && <span className="text-xs text-gray-500">+{filteredEvents.length - 3}개 더</span>}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+<div className="bg-white rounded-lg shadow-sm p-6">
+  <h4 className="font-semibold mb-4 text-lg">{selectedDate.getFullYear()}년 {monthNames[selectedDate.getMonth()]} 일정 목록</h4>
+  <div className="space-y-3">
+    {filterBySearch(getAllDatesInMonth(selectedDate), []).map(date => {
+      const dateStr = formatDate(date);
+      const dayEvents = getEventsForDate(date);
+      const filteredEvents = filterBySearch(dayEvents, ['title', 'description']);
+      const isToday = dateStr === formatDate(new Date());
+      
+      if (searchQuery && filteredEvents.length === 0) return null;
+      
+      return (
+        <div key={dateStr} className={`p-4 rounded-lg border-2 hover:shadow-md transition ${isToday ? 'border-blue-500' : 'border-gray-200'}`}>
+          <div className={`font-medium mb-2 ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>
+            {date.getMonth() + 1}월 {date.getDate()}일 ({weekDays[date.getDay()]})
+            {isToday && <span className="ml-2 text-sm bg-blue-600 text-white px-2 py-0.5 rounded">오늘</span>}
+          </div>
+          {filteredEvents.length === 0 ? (
+            <p className="text-sm text-gray-500">일정이 없습니다</p>
+          ) : (
+            <div className="space-y-2">
+              {filteredEvents.map(event => {
+                const eventColor = event.isAnniversary 
+                  ? getAnniversaryColor(event.anniversaryType)
+                  : categories[event.category]?.hexColor || '#6b7280';
+                
+                return (
+                  <div key={event.id} className="flex items-center justify-between p-2 rounded border" style={{ borderColor: eventColor }}>
+                    <span className="text-xs flex-1" style={{ color: eventColor }}>
+                      {event.title}
+                    </span>
+                    {!event.isAnniversary && <ThreeDotsMenu type="event" item={event} />}
+                  </div>
+                );
+              })}
             </div>
+          )}
+        </div>
+      );
+    })}
+  </div>
+</div>
           )}
          {/* 루틴 탭 */}
           {activeTab === 'routine' && (
@@ -1564,77 +1565,115 @@ const loadUserData = async (currentUser = user) => {  // 👈 파라미터 추�
                   </div>
                   
                   {/* 예정 할일 */}
-                  <div className="bg-white rounded-xl shadow-sm overflow-hidden border-2 border-purple-500">
-                    <div className="border-b border-purple-200 px-6 py-4">
-                      <h3 className="font-semibold text-purple-600">예정</h3>
+<div className="bg-white rounded-xl shadow-sm overflow-hidden border-2 border-purple-500">
+  <div className="border-b border-purple-200 px-6 py-4">
+    <h3 className="font-semibold text-purple-600">예정</h3>
+  </div>
+  <div className="p-4">
+    {(() => {
+      const upcomingTodos = getUpcomingTodos();
+      const filteredTodos = filterBySearch(upcomingTodos, ['title', 'description']);
+      return filteredTodos.length === 0 ? (
+        <p className="text-center py-6 text-gray-400">
+          {searchQuery ? '검색 결과가 없습니다' : '예정된 할 일이 없습니다'}
+        </p>
+      ) : (
+        <div className="space-y-4">
+          {Object.entries(groupTodosByDate(filteredTodos)).map(([date, todos]) => (
+            <div key={date}>
+              <div className="text-xs font-medium text-gray-500 mb-2">{date}</div>
+              <div className="space-y-2">
+                {todos.map(todo => (
+                  <div key={todo.id} className="flex items-center gap-3 p-3 rounded-lg border">
+                    <input type="checkbox" onChange={() => toggleComplete(todo.id)} className="w-5 h-5" />
+                    <div className="flex-1">
+                      <div className="font-medium flex items-center gap-2">
+                        {todo.isFromRoutine && <span className="text-blue-600">🔁</span>}
+                        {todo.title}
+                      </div>
                     </div>
-                    <div className="p-4">
-                      {(() => {
-                        const upcomingTodos = getUpcomingTodos();
-                        const filteredTodos = filterBySearch(upcomingTodos, ['title', 'description']);
-                        return filteredTodos.length === 0 ? (
-                          <p className="text-center py-6 text-gray-400">
-                            {searchQuery ? '검색 결과가 없습니다' : '예정된 할 일이 없습니다'}
-                          </p>
-                        ) : (
-                          <div className="space-y-4">
-                            {Object.entries(groupTodosByDate(filteredTodos)).map(([date, todos]) => (
-                              <div key={date}>
-                                <div className="text-xs font-medium text-gray-500 mb-2">{date}</div>
-                                <div className="space-y-2">
-                                  {todos.map(todo => (
-                                    <div key={todo.id} className="flex items-center gap-3 p-3 rounded-lg border">
-                                      <input type="checkbox" onChange={() => toggleComplete(todo.id)} className="w-5 h-5" />
-                                      <div className="flex-1">
-                                        <div className="font-medium flex items-center gap-2">
-                                          {todo.isFromRoutine && <span className="text-blue-600">🔁</span>}
-                                          {todo.title}
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        {todo.priority === 'high' && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
-                                        {todo.priority === 'medium' && <span className="w-2 h-2 rounded-full bg-yellow-500"></span>}
-                                        {todo.priority === 'low' && <span className="w-2 h-2 rounded-full bg-green-500"></span>}
-                                        <ThreeDotsMenu type="todo" item={todo} />
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()}
+                    <div className="flex items-center gap-2">
+                      {todo.priority === 'high' && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
+                      {todo.priority === 'medium' && <span className="w-2 h-2 rounded-full bg-yellow-500"></span>}
+                      {todo.priority === 'low' && <span className="w-2 h-2 rounded-full bg-green-500"></span>}
+                      <ThreeDotsMenu type="todo" item={todo} />
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                  <h3 className="font-semibold mb-4">완료된 할 일</h3>
-                  {completedTodos.length === 0 ? (
-                    <p className="text-center py-8 text-gray-400">완료된 할 일이 없습니다</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {completedTodos.map(todo => (
-                        <div key={todo.id} className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50">
-                          <CheckCircle2 size={20} className="text-green-600" />
-                          <div className="flex-1">
-                            <div className="font-medium line-through text-gray-500">{todo.title}</div>
-                          </div>
-                          <button onClick={() => restoreTodo(todo.id)} className="p-1 hover:bg-gray-200 rounded">
-                            <RotateCcw size={16} />
-                          </button>
-                          <button onClick={() => deleteItem('completed', todo.id)} className="p-1 hover:bg-red-100 rounded text-red-600">
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+                ))}
+              </div>
             </div>
-          )}
+          ))}
+        </div>
+      );
+    })()}
+  </div>
+</div>
+
+{/* 날짜 없는 할일 */}
+<div className="bg-white rounded-xl shadow-sm overflow-hidden border-2 border-gray-400">
+  <div className="border-b border-gray-200 px-6 py-4">
+    <h3 className="font-semibold text-gray-600">날짜 미정</h3>
+  </div>
+  <div className="p-4 space-y-2">
+    {(() => {
+      const noDateTodos = getNoDateTodos();
+      const filteredTodos = filterBySearch(noDateTodos, ['title', 'description']);
+      return filteredTodos.length === 0 ? (
+        <p className="text-center py-6 text-gray-400">
+          {searchQuery ? '검색 결과가 없습니다' : '날짜 없는 할 일이 없습니다'}
+        </p>
+      ) : (
+        filteredTodos.map(todo => (
+          <div key={todo.id} className="flex items-center gap-3 p-3 rounded-lg border">
+            <input type="checkbox" onChange={() => toggleComplete(todo.id)} className="w-5 h-5" />
+            <div className="flex-1">
+              <div className="font-medium flex items-center gap-2">
+                {todo.isFromRoutine && <span className="text-blue-600">🔁</span>}
+                {todo.title}
+              </div>
+              {todo.description && <div className="text-xs text-gray-500">{todo.description}</div>}
+            </div>
+            <div className="flex items-center gap-2">
+              {todo.priority === 'high' && <span className="w-2 h-2 rounded-full bg-red-500"></span>}
+              {todo.priority === 'medium' && <span className="w-2 h-2 rounded-full bg-yellow-500"></span>}
+              {todo.priority === 'low' && <span className="w-2 h-2 rounded-full bg-green-500"></span>}
+              <ThreeDotsMenu type="todo" item={todo} />
+            </div>
+          </div>
+        ))
+      );
+    })()}
+  </div>
+</div>
+
+</div>
+) : (
+  <div className="bg-white rounded-xl shadow-sm p-6">
+    <h3 className="font-semibold mb-4">완료된 할 일</h3>
+    {completedTodos.length === 0 ? (
+      <p className="text-center py-8 text-gray-400">완료된 할 일이 없습니다</p>
+    ) : (
+      <div className="space-y-2">
+        {completedTodos.map(todo => (
+          <div key={todo.id} className="flex items-center gap-3 p-3 rounded-lg border bg-gray-50">
+            <CheckCircle2 size={20} className="text-green-600" />
+            <div className="flex-1">
+              <div className="font-medium line-through text-gray-500">{todo.title}</div>
+            </div>
+            <button onClick={() => restoreTodo(todo.id)} className="p-1 hover:bg-gray-200 rounded">
+              <RotateCcw size={16} />
+            </button>
+            <button onClick={() => deleteItem('completed', todo.id)} className="p-1 hover:bg-red-100 rounded text-red-600">
+              <Trash2 size={16} />
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
+</div>
+)}
           
           {/* 설정 탭 */}
           {activeTab === 'settings' && (
@@ -2103,47 +2142,52 @@ const loadUserData = async (currentUser = user) => {  // 👈 파라미터 추�
         </div>
       )}
       
-      {/* 날짜 상세 모달 */}
-      {dayDetailModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">
-                {selectedDayDate && `${selectedDayDate.getMonth() + 1}월 ${selectedDayDate.getDate()}일`}
-              </h3>
-              <button onClick={() => setDayDetailModalOpen(false)} className="p-1 hover:bg-gray-100 rounded">
-                <X size={20} />
-              </button>
-            </div>
+     {/* 날짜 상세 모달 */}
+{dayDetailModalOpen && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">
+          {selectedDayDate && `${selectedDayDate.getMonth() + 1}월 ${selectedDayDate.getDate()}일`}
+        </h3>
+        <button onClick={() => setDayDetailModalOpen(false)} className="p-1 hover:bg-gray-100 rounded">
+          <X size={20} />
+        </button>
+      </div>
+      
+      <div className="space-y-3">
+        {selectedDayEvents.length === 0 ? (
+          <p className="text-center py-8 text-gray-400">일정이 없습니다</p>
+        ) : (
+          selectedDayEvents.map(event => {
+            const eventColor = event.isAnniversary 
+              ? getAnniversaryColor(event.anniversaryType)
+              : categories[event.category]?.hexColor || '#6b7280';
             
-            <div className="space-y-3">
-              {selectedDayEvents.length === 0 ? (
-                <p className="text-center py-8 text-gray-400">일정이 없습니다</p>
-              ) : (
-                selectedDayEvents.map(event => {
-                  const eventColor = event.isAnniversary 
-                    ? getAnniversaryColor(event.anniversaryType)
-                    : categories[event.category]?.hexColor || '#6b7280';
-                  
-                  return (
-                    <div key={event.id} className="p-4 border-l-4 border rounded-lg" style={{ borderLeftColor: eventColor }}>
-                      <div className="font-medium" style={{ color: eventColor }}>
-                        {event.title}
-                      </div>
-                      {event.description && (
-                        <div className="text-sm text-gray-600 mt-1">{event.description}</div>
-                      )}
-                      {event.time && (
-                        <div className="text-xs text-gray-500 mt-1">⏰ {event.time}</div>
-                      )}
+            return (
+              <div key={event.id} className="p-4 border-l-4 border rounded-lg" style={{ borderLeftColor: eventColor }}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="font-medium" style={{ color: eventColor }}>
+                      {event.title}
                     </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+                    {event.description && (
+                      <div className="text-sm text-gray-600 mt-1">{event.description}</div>
+                    )}
+                    {event.time && (
+                      <div className="text-xs text-gray-500 mt-1">⏰ {event.time}</div>
+                    )}
+                  </div>
+                  {!event.isAnniversary && <ThreeDotsMenu type="event" item={event} />}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };
