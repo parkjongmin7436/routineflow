@@ -231,16 +231,35 @@ const PlannerApp = () => {
   };
   
   // ============================================
-  // 🎯 공휴일 데이터 로드
-  // ============================================
-  useEffect(() => {
-    const loadHolidays = async () => {
-      const year = selectedDate.getFullYear();
-      const holidayData = await fetchHolidays(year);
-      setHolidays(holidayData);
-    };
-    loadHolidays();
-  }, [selectedDate]);
+// 🎯 공휴일 & 음력 데이터 로드
+// ============================================
+useEffect(() => {
+  const loadMonthData = async () => {
+    const year = selectedDate.getFullYear();
+    const month = selectedDate.getMonth();
+    
+    // 공휴일 로드
+    const holidayData = await fetchHolidays(year);
+    setHolidays(holidayData);
+    
+    // 음력 데이터 로드 (해당 월의 모든 날짜)
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const lunarData = {};
+    
+    for (let day = 1; day <= lastDay; day++) {
+      const date = new Date(year, month, day);
+      const dateStr = formatDate(date);
+      const lunar = await convertSolarToLunar(dateStr);
+      if (lunar) {
+        lunarData[dateStr] = lunar;
+      }
+    }
+    
+    setLunarDates(lunarData);
+  };
+  
+  loadMonthData();
+}, [selectedDate]);
   
   // ============================================
   // 🔄 루틴 → 할일 자동 변환
@@ -333,16 +352,10 @@ const PlannerApp = () => {
     return `${year}-${month}-${day}`;
   };
   
-  const getLunarDate = (date) => {
-    const dateStr = formatDate(date);
-    if (lunarDates[dateStr]) {
-      return lunarDates[dateStr];
-    }
-    // 간단한 근사치 (실제로는 API 호출 필요)
-    const lunarDate = new Date(date);
-    lunarDate.setDate(lunarDate.getDate() - 28);
-    return `${lunarDate.getMonth() + 1}.${lunarDate.getDate()}`;
-  };
+const getLunarDate = (date) => {
+  const dateStr = formatDate(date);
+  return lunarDates[dateStr] || '';
+};
   
   // ============================================
   // 🔧 기념일 계산 - 커플 기념일
