@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, CheckSquare, Settings, Plus, X, Trash2, Menu, Download, Upload, FileText, User, MoreVertical, Edit, CheckCircle2, RotateCcw, Palette, Dumbbell, Heart, Search, LogOut } from 'lucide-react';
-import { supabase, TABLES } from '../lib/supabase';
+import { supabase, TABLES } from './lib/supabase';
+import { fetchHolidays, convertSolarToLunar } from './lib/api';
 
 // ============================================
 // 🎨 메인 컴포넌트
