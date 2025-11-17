@@ -111,32 +111,17 @@ const PlannerApp = () => {
   ];
   
   // ============================================
-  // 🎨 상수 - 기념일 색상 정의
-  // ============================================
-  const ANNIVERSARY_COLORS = {
-    dday: '#f59e0b',
-    birthday: '#ec4899',
-    couple: '#ef4444'
-  };
-  
-  // ============================================
-  // 🔐 인증 체크 (Supabase)
-  // ============================================
-useEffect(() => {
-  checkUser();
-  
-  const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-    setUser(session?.user || null);
-    if (session?.user) {
-      loadUserData(session.user);
-    }
-  });
-  
-  return () => {
-    authListener.subscription.unsubscribe();
-  };
-}, []);
+// 🎨 상수 - 기념일 색상 정의
+// ============================================
+const ANNIVERSARY_COLORS = {
+  dday: '#f59e0b',
+  birthday: '#ec4899',
+  couple: '#ef4444'
+};
 
+// ============================================
+// 🔐 인증 체크 함수
+// ============================================
 const checkUser = async () => {
   const { data: { session } } = await supabase.auth.getSession();
   setUser(session?.user || null);
@@ -146,7 +131,7 @@ const checkUser = async () => {
     loadUserData(session.user);
   }
 };
-  
+
 // ============================================
 // 🔐 인증 상태 관리
 // ============================================
@@ -171,7 +156,6 @@ useEffect(() => {
 useEffect(() => {
   if (!user) return;
   
-  // 디바운스: 1초 후 저장
   const timer = setTimeout(() => {
     saveUserData(user);
   }, 1000);
