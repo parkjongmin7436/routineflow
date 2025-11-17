@@ -209,41 +209,95 @@ useEffect(() => {
   
   loadHolidays();
 }, [selectedDate]); // selectedDate가 바뀔 때마다 공휴일 다시 로드
+
   // ============================================
-  // 💾 데이터 로드 (localStorage)
+// 💾 데이터 자동 저장 (Supabase + 디바운스)
+// ============================================
+useEffect(() => {
+  if (!user) return;
+  
+  const timeoutId = setTimeout(() => {
+    saveUserData();
+  }, 1000);
+  
+  return () => clearTimeout(timeoutId);
+}, [events, routines, todos, completedTodos, categories, exercises, anniversaries, user]);
+  
   // ============================================
-  useEffect(() => {
-    if (!user) return;
+  // 💾 Supabase 데이터 불러오기
+  // ============================================
+  const loadUserData = async () => {
+  if (!user) return;
+  
+  try {
+    const { data, error } = await supabase
+      .from('user_planner_data')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
     
-    const savedData = localStorage.getItem(`plannerData_${user.id}`);
-    if (savedData) {
-      const data = JSON.parse(savedData);
+    if (error) {
+      if (error.code === 'PGRST116') {
+        await saveUserData();
+      } else {
+        console.error('데이터 로드 실패:', error);
+      }
+      return;
+    }
+    
+    if (data) {
       if (data.events) setEvents(data.events);
       if (data.routines) setRoutines(data.routines);
       if (data.todos) setTodos(data.todos);
-      if (data.completedTodos) setCompletedTodos(data.completedTodos);
+      if (data.completed_todos) setCompletedTodos(data.completed_todos);
       if (data.categories) setCategories(data.categories);
       if (data.exercises) setExercises(data.exercises);
       if (data.anniversaries) setAnniversaries(data.anniversaries);
     }
-  }, [user]);
+  } catch (error) {
+    console.error('데이터 로드 중 오류:', error);
+  }
+};
+
+const saveUserData = async () => {
+  if (!user) return;
   
-  // ============================================
-  // 💾 데이터 저장 (localStorage)
-  // ============================================
-  useEffect(() => {
-    if (!user) return;
-    
-    const data = { events, routines, todos, completedTodos, categories, exercises, anniversaries };
-    localStorage.setItem(`plannerData_${user.id}`, JSON.stringify(data));
-  }, [events, routines, todos, completedTodos, categories, exercises, anniversaries, user]);
-  
-  // ============================================
-  // 💾 Supabase 데이터 불러오기 (선택사항)
-  // ============================================
-  const loadUserData = async () => {
-    // 현재는 localStorage 사용, 나중에 Supabase로 전환 가능
+  const userData = {
+    user_id: user.id,
+    events,
+    routines,
+    todos,
+    completed_todos: completedTodos,
+    categories,
+    exercises,
+    anniversaries
   };
+  
+  try {
+    const { data: existing } = await supabase
+      .from('user_planner_data')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+    
+    if (existing) {
+      const { error } = await supabase
+        .from('user_planner_data')
+        .update(userData)
+        .eq('user_id', user.id);
+      
+      if (error) console.error('데이터 업데이트 실패:', error);
+    } else {
+      const { error } = await supabase
+        .from('user_planner_data')
+        .insert([userData]);
+      
+      if (error) console.error('데이터 생성 실패:', error);
+    }
+  } catch (error) {
+    console.error('데이터 저장 중 오류:', error);
+  }
+};
   
   // ============================================
   // 🔄 루틴 → 할일 자동 변환
