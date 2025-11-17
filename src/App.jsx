@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar, Clock, CheckSquare, Settings, Plus, X, Trash2, Menu, Download, Upload, FileText, User, MoreVertical, Edit, CheckCircle2, RotateCcw, Palette, Dumbbell, Heart, Search, LogOut } from 'lucide-react';
 import { supabase, TABLES } from './lib/supabase';
-import { fetchHolidays } from './lib/api'; // convertSolarToLunar은 사용 안 함 (음력 기능 비활성화)
+import { fetchHolidays } from './lib/api';
 
 // ============================================
 // 🎨 메인 컴포넌트
@@ -63,7 +63,7 @@ const PlannerApp = () => {
     etc: { name: '기타', hexColor: '#6b7280' }
   });
   const [holidayApiKey] = useState('5b1eb4b16c1166d4845f8a6414fbab9bd5fb41cba7b438006d97abdb655bbc01');
-  const [holidays] = useState({});
+ const [holidays, setHolidays] = useState({});
   
   // ============================================
   // 📊 STATE 관리 - 폼 데이터
@@ -193,7 +193,22 @@ const PlannerApp = () => {
     setExercises([]);
     setAnniversaries({ ddays: [], couple: null, birthdays: [] });
   };
+  // ============================================
+  // 📅 공휴일 데이터 로드
+  // ============================================
+useEffect(() => {
+  const loadHolidays = async () => {
+    const year = selectedDate.getFullYear();
+    try {
+      const holidayData = await fetchHolidays(year);
+      setHolidays(holidayData);
+    } catch (error) {
+      console.error('공휴일 로드 실패:', error);
+    }
+  };
   
+  loadHolidays();
+}, [selectedDate]); // selectedDate가 바뀔 때마다 공휴일 다시 로드
   // ============================================
   // 💾 데이터 로드 (localStorage)
   // ============================================
