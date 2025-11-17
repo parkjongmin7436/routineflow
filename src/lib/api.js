@@ -5,7 +5,7 @@ const API_KEY = import.meta.env.VITE_HOLIDAY_API_KEY
 // 공휴일 정보 가져오기
 export const fetchHolidays = async (year) => {
   try {
-    const url = `http://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo?solYear=${year}&ServiceKey=${API_KEY}&_type=json&numOfRows=100`
+    const url = `https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo?solYear=${year}&ServiceKey=${API_KEY}&_type=json&numOfRows=100`
     const response = await fetch(url)
     const data = await response.json()
     
@@ -32,7 +32,7 @@ export const fetchHolidays = async (year) => {
 export const convertSolarToLunar = async (solarDate) => {
   try {
     const [year, month, day] = solarDate.split('-')
-    const url = `http://apis.data.go.kr/B090041/openapi/service/LrsrCldInfoService/getSolToLunInfo?solYear=${year}&solMonth=${month}&solDay=${day}&ServiceKey=${API_KEY}&_type=json`
+    const url = `https://apis.data.go.kr/B090041/openapi/service/LrsrCldInfoService/getSolToLunInfo?solYear=${year}&solMonth=${month}&solDay=${day}&ServiceKey=${API_KEY}&_type=json`
     const response = await fetch(url)
     const data = await response.json()
     
