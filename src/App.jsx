@@ -224,9 +224,9 @@ useEffect(() => {
 }, [events, routines, todos, completedTodos, categories, exercises, anniversaries, user]);
   
   // ============================================
-  // 💾 Supabase 데이터 불러오기
-  // ============================================
-  const loadUserData = async () => {
+// 💾 Supabase 데이터 불러오기
+// ============================================
+const loadUserData = async () => {
   if (!user) return;
   
   try {
@@ -260,44 +260,7 @@ useEffect(() => {
 };
 
 const saveUserData = async () => {
-  if (!user) return;
-  
-  const userData = {
-    user_id: user.id,
-    events,
-    routines,
-    todos,
-    completed_todos: completedTodos,
-    categories,
-    exercises,
-    anniversaries
-  };
-  
-  try {
-    const { data: existing } = await supabase
-      .from('user_planner_data')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
-    
-    if (existing) {
-      const { error } = await supabase
-        .from('user_planner_data')
-        .update(userData)
-        .eq('user_id', user.id);
-      
-      if (error) console.error('데이터 업데이트 실패:', error);
-    } else {
-      const { error } = await supabase
-        .from('user_planner_data')
-        .insert([userData]);
-      
-      if (error) console.error('데이터 생성 실패:', error);
-    }
-  } catch (error) {
-    console.error('데이터 저장 중 오류:', error);
-  }
-};
+  // ... 여기는 이미 수정함
   
   // ============================================
   // 🔄 루틴 → 할일 자동 변환
