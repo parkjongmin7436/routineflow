@@ -376,49 +376,49 @@ const getLunarDate = (date) => {
   const [year, month, day] = anniversaries.couple.startDate.split('-');
   const startDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   const cycles = anniversaries.couple.cycles || [];
-    
-    if (cycles.includes(100)) {
-      for (let i = 1; i <= 50; i++) {
-        const d = new Date(startDate);
-        d.setDate(d.getDate() + (i * 100));
-        const key = formatDate(d);
-        if (!dates[key]) dates[key] = [];
-        dates[key].push({ text: `❤️ ${i * 100}일`, type: 'couple' });
-      }
+  
+  if (cycles.includes(100)) {
+    for (let i = 1; i <= 50; i++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + (i * 100 - 1));  // ← 수정!
+      const key = formatDate(d);
+      if (!dates[key]) dates[key] = [];
+      dates[key].push({ text: `❤️ ${i * 100}일`, type: 'couple' });
     }
-    
-    if (cycles.includes(500)) {
-      for (let i = 1; i <= 20; i++) {
-        const d = new Date(startDate);
-        d.setDate(d.getDate() + (i * 500));
-        const key = formatDate(d);
-        if (!dates[key]) dates[key] = [];
-        dates[key].push({ text: `❤️ ${i * 500}일`, type: 'couple' });
-      }
+  }
+  
+  if (cycles.includes(500)) {
+    for (let i = 1; i <= 20; i++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + (i * 500 - 1));  // ← 수정!
+      const key = formatDate(d);
+      if (!dates[key]) dates[key] = [];
+      dates[key].push({ text: `❤️ ${i * 500}일`, type: 'couple' });
     }
-    
-    if (cycles.includes(1000)) {
-      for (let i = 1; i <= 10; i++) {
-        const d = new Date(startDate);
-        d.setDate(d.getDate() + (i * 1000));
-        const key = formatDate(d);
-        if (!dates[key]) dates[key] = [];
-        dates[key].push({ text: `❤️ ${i * 1000}일`, type: 'couple' });
-      }
+  }
+  
+  if (cycles.includes(1000)) {
+    for (let i = 1; i <= 10; i++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + (i * 1000 - 1));  // ← 수정!
+      const key = formatDate(d);
+      if (!dates[key]) dates[key] = [];
+      dates[key].push({ text: `❤️ ${i * 1000}일`, type: 'couple' });
     }
-    
-    if (cycles.includes('yearly')) {
-      for (let i = 1; i <= 50; i++) {
-        const d = new Date(startDate);
-        d.setFullYear(d.getFullYear() + i);
-        const key = formatDate(d);
-        if (!dates[key]) dates[key] = [];
-        dates[key].push({ text: `❤️ ${i}주년`, type: 'couple' });
-      }
+  }
+  
+  if (cycles.includes('yearly')) {
+    for (let i = 1; i <= 50; i++) {
+      const d = new Date(startDate);
+      d.setFullYear(d.getFullYear() + i);
+      const key = formatDate(d);
+      if (!dates[key]) dates[key] = [];
+      dates[key].push({ text: `❤️ ${i}주년`, type: 'couple' });
     }
-    
-    return dates;
-  };
+  }
+  
+  return dates;
+};
   
   // ============================================
   // 🔧 기념일 계산 - D-Day 카운트다운
