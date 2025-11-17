@@ -122,29 +122,14 @@ const PlannerApp = () => {
   // ============================================
   // 🔐 인증 체크 (Supabase)
   // ============================================
-  useEffect(() => {
-    checkUser();
-    
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null);
-      if (session?.user) {
-        loadUserData();
-      }
-    });
-    
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-  
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setUser(session?.user || null);
-    if (session?.user) {
-      await loadUserData();
-    }
-    setLoading(false);
-  };
+  const { data: { session } } = await supabase.auth.getSession();
+  setUser(session?.user || null);
+  if (session?.user) {
+    await loadUserData(session.user);  // 👈 user를 직접 전달
+  }
+  setLoading(false);
+};
   
   // ============================================
   // 🔐 로그인 (Supabase)
@@ -213,8 +198,8 @@ useEffect(() => {
   // ============================================
 // 💾 데이터 자동 저장 (Supabase + 디바운스)
 // ============================================
-const saveUserData = async () => {
-  if (!user) {
+const saveUserData = async (currentUser = user) => {  // 👈 파라미터 추가
+  if (!currentUser) {
     console.log('❌ 저장 실패: 사용자 없음');
     return;
   }
@@ -222,7 +207,7 @@ const saveUserData = async () => {
   console.log('💾 저장 시도 중...');
   
   const userData = {
-    user_id: user.id,
+    user_id: currentUser.id,  // 👈 user → currentUser
     events,
     routines,
     todos,
@@ -238,7 +223,7 @@ const saveUserData = async () => {
     const { data: existing, error: selectError } = await supabase
       .from('user_planner_data')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('user_id', currentUser.id)  // 👈 user → currentUser
       .maybeSingle();
     
     if (selectError) {
@@ -251,7 +236,7 @@ const saveUserData = async () => {
       const { error } = await supabase
         .from('user_planner_data')
         .update(userData)
-        .eq('user_id', user.id);
+        .eq('user_id', currentUser.id);  // 👈 user → currentUser
       
       if (error) {
         console.error('❌ 업데이트 실패:', error);
@@ -278,25 +263,25 @@ const saveUserData = async () => {
   // ============================================
 // 💾 Supabase 데이터 불러오기
 // ============================================
-const loadUserData = async () => {
-  if (!user) {
+const loadUserData = async (currentUser = user) => {  // 👈 파라미터 추가
+  if (!currentUser) {
     console.log('❌ 로드 실패: 사용자 없음');
     return;
   }
   
-  console.log('📥 데이터 로드 중...');
+  console.log('📥 데이터 로드 중...', currentUser.email);
   
   try {
     const { data, error } = await supabase
       .from('user_planner_data')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', currentUser.id)  // 👈 user → currentUser
       .maybeSingle();
     
     if (error) {
       console.error('❌ 로드 에러:', error);
       console.log('➕ 초기 데이터 생성 시도');
-      await saveUserData();
+      await saveUserData(currentUser);  // 👈 파라미터 추가
       return;
     }
     
