@@ -213,39 +213,95 @@ useEffect(() => {
   // ============================================
 // 💾 데이터 자동 저장 (Supabase + 디바운스)
 // ============================================
-useEffect(() => {
-  if (!user) return;
+const saveUserData = async () => {
+  if (!user) {
+    console.log('❌ 저장 실패: 사용자 없음');
+    return;
+  }
   
-  const timeoutId = setTimeout(() => {
-    saveUserData();
-  }, 1000);
+  console.log('💾 저장 시도 중...');
   
-  return () => clearTimeout(timeoutId);
-}, [events, routines, todos, completedTodos, categories, exercises, anniversaries, user]);
+  const userData = {
+    user_id: user.id,
+    events,
+    routines,
+    todos,
+    completed_todos: completedTodos,
+    categories,
+    exercises,
+    anniversaries
+  };
+  
+  console.log('📦 저장할 데이터:', userData);
+  
+  try {
+    const { data: existing, error: selectError } = await supabase
+      .from('user_planner_data')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    if (selectError) {
+      console.error('❌ 조회 에러:', selectError);
+      return;
+    }
+    
+    if (existing) {
+      console.log('📝 기존 데이터 업데이트 중...');
+      const { error } = await supabase
+        .from('user_planner_data')
+        .update(userData)
+        .eq('user_id', user.id);
+      
+      if (error) {
+        console.error('❌ 업데이트 실패:', error);
+      } else {
+        console.log('✅ 업데이트 성공!');
+      }
+    } else {
+      console.log('➕ 새 데이터 생성 중...');
+      const { error } = await supabase
+        .from('user_planner_data')
+        .insert([userData]);
+      
+      if (error) {
+        console.error('❌ 생성 실패:', error);
+      } else {
+        console.log('✅ 생성 성공!');
+      }
+    }
+  } catch (error) {
+    console.error('❌ 저장 중 치명적 오류:', error);
+  }
+};
   
   // ============================================
 // 💾 Supabase 데이터 불러오기
 // ============================================
 const loadUserData = async () => {
-  if (!user) return;
+  if (!user) {
+    console.log('❌ 로드 실패: 사용자 없음');
+    return;
+  }
+  
+  console.log('📥 데이터 로드 중...');
   
   try {
     const { data, error } = await supabase
       .from('user_planner_data')
       .select('*')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
     
     if (error) {
-      if (error.code === 'PGRST116') {
-        await saveUserData();
-      } else {
-        console.error('데이터 로드 실패:', error);
-      }
+      console.error('❌ 로드 에러:', error);
+      console.log('➕ 초기 데이터 생성 시도');
+      await saveUserData();
       return;
     }
     
     if (data) {
+      console.log('✅ 데이터 로드 성공:', data);
       if (data.events) setEvents(data.events);
       if (data.routines) setRoutines(data.routines);
       if (data.todos) setTodos(data.todos);
@@ -253,14 +309,13 @@ const loadUserData = async () => {
       if (data.categories) setCategories(data.categories);
       if (data.exercises) setExercises(data.exercises);
       if (data.anniversaries) setAnniversaries(data.anniversaries);
+    } else {
+      console.log('⚠️ 데이터 없음 - 초기화');
     }
   } catch (error) {
-    console.error('데이터 로드 중 오류:', error);
+    console.error('❌ 로드 중 치명적 오류:', error);
   }
 };
-
-const saveUserData = async () => {
-  // ... 여기는 이미 수정함
   
   // ============================================
   // 🔄 루틴 → 할일 자동 변환
