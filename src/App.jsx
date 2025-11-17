@@ -1502,6 +1502,329 @@ const PlannerApp = () => {
           </div>
         </div>
       )}
+      {/* 카테고리 관리 모달 */}
+      {categoryModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">카테고리 관리</h3>
+              <button onClick={() => setCategoryModalOpen(false)} className="p-1 hover:bg-gray-100 rounded">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="카테고리 이름"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <select
+                  value={newCategoryColor}
+                  onChange={(e) => setNewCategoryColor(e.target.value)}
+                  className="px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  style={{ backgroundColor: newCategoryColor, color: 'white' }}
+                >
+                  {colorOptions.map(color => (
+                    <option key={color} value={color} style={{ backgroundColor: color }}>
+                      {color}
+                    </option>
+                  ))}
+                </select>
+                <button onClick={addCategory} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                  추가
+                </button>
+              </div>
+              
+              <div className="space-y-2">
+                {Object.entries(categories).map(([key, cat]) => (
+                  <div key={key} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 rounded" style={{ backgroundColor: cat.hexColor }}></div>
+                      <span>{cat.name}</span>
+                    </div>
+                    <button onClick={() => deleteCategory(key)} className="text-red-600 hover:bg-red-50 p-2 rounded">
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 기념일 관리 모달 */}
+      {anniversaryModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">기념일 관리</h3>
+              <button onClick={() => setAnniversaryModalOpen(false)} className="p-1 hover:bg-gray-100 rounded">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="flex gap-2 mb-4">
+                <button onClick={() => setAnniversaryType('dday')} className={`px-4 py-2 rounded-lg ${anniversaryType === 'dday' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>
+                  D-Day
+                </button>
+                <button onClick={() => setAnniversaryType('couple')} className={`px-4 py-2 rounded-lg ${anniversaryType === 'couple' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>
+                  커플 기념일
+                </button>
+                <button onClick={() => setAnniversaryType('birthday')} className={`px-4 py-2 rounded-lg ${anniversaryType === 'birthday' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>
+                  생일
+                </button>
+              </div>
+              
+              {anniversaryType === 'dday' && (
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    placeholder="D-Day 이름"
+                    value={anniversaryForm.name}
+                    onChange={(e) => setAnniversaryForm({ ...anniversaryForm, name: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="date"
+                    value={anniversaryForm.date}
+                    onChange={(e) => setAnniversaryForm({ ...anniversaryForm, date: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button onClick={addAnniversary} className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                    추가
+                  </button>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-semibold">등록된 D-Day</h4>
+                    {anniversaries.ddays.map(d => (
+                      <div key={d.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <span>{d.name} - {d.date}</span>
+                        <button onClick={() => deleteAnniversary('dday', d.id)} className="text-red-600">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {anniversaryType === 'couple' && (
+                <div className="space-y-4">
+                  <input
+                    type="date"
+                    value={coupleForm.startDate}
+                    onChange={(e) => setCoupleForm({ ...coupleForm, startDate: e.target.value })}
+                    placeholder="사귄 날짜"
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <div>
+                    <label className="block text-sm font-medium mb-2">표시 주기</label>
+                    <div className="flex gap-2 flex-wrap">
+                      {[100, 500, 1000, 'yearly'].map(cycle => (
+                        <button
+                          key={cycle}
+                          onClick={() => toggleCoupleCycle(cycle)}
+                          className={`px-4 py-2 rounded-lg ${coupleForm.cycles.includes(cycle) ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}
+                        >
+                          {cycle === 'yearly' ? '매년' : `${cycle}일`}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <button onClick={addAnniversary} className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                    저장
+                  </button>
+                  
+                  {anniversaries.couple && (
+                    <div className="p-3 border rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span>시작일: {anniversaries.couple.startDate}</span>
+                        <button onClick={() => deleteAnniversary('couple', null)} className="text-red-600">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {anniversaryType === 'birthday' && (
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    placeholder="이름"
+                    value={anniversaryForm.name}
+                    onChange={(e) => setAnniversaryForm({ ...anniversaryForm, name: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="date"
+                    value={anniversaryForm.date}
+                    onChange={(e) => setAnniversaryForm({ ...anniversaryForm, date: e.target.value })}
+                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button onClick={addAnniversary} className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                    추가
+                  </button>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-semibold">등록된 생일</h4>
+                    {anniversaries.birthdays.map(b => (
+                      <div key={b.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <span>{b.name} - {b.date}</span>
+                        <button onClick={() => deleteAnniversary('birthday', b.id)} className="text-red-600">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 운동 루틴 관리 모달 */}
+      {exerciseHomeOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">운동 루틴 관리</h3>
+              <button onClick={() => setExerciseHomeOpen(false)} className="p-1 hover:bg-gray-100 rounded">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <button onClick={() => setExerciseAddModalOpen(true)} className="w-full mb-4 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+              <Plus size={18} className="inline mr-2" />
+              새 운동 추가
+            </button>
+            
+            <div className="space-y-2">
+              {exercises.map(ex => (
+                <div key={ex.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <div className="font-medium">{ex.name}</div>
+                    <div className="text-sm text-gray-600">{ex.sets}세트 x {ex.reps}회</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {ex.weekDays.map(d => weekDaysKor[d].slice(0, 1)).join(', ')}
+                    </div>
+                  </div>
+                  <button onClick={() => deleteItem('exercise', ex.id)} className="text-red-600 hover:bg-red-50 p-2 rounded">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 운동 추가 모달 */}
+      {exerciseAddModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">새 운동 추가</h3>
+              <button onClick={() => setExerciseAddModalOpen(false)} className="p-1 hover:bg-gray-100 rounded">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="운동명"
+                value={exerciseForm.name}
+                onChange={(e) => setExerciseForm({ ...exerciseForm, name: e.target.value })}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <input
+                  type="number"
+                  placeholder="세트"
+                  value={exerciseForm.sets}
+                  onChange={(e) => setExerciseForm({ ...exerciseForm, sets: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <input
+                  type="number"
+                  placeholder="횟수"
+                  value={exerciseForm.reps}
+                  onChange={(e) => setExerciseForm({ ...exerciseForm, reps: e.target.value })}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">요일 선택</label>
+                <div className="flex gap-2">
+                  {['일', '월', '화', '수', '목', '금', '토'].map((day, index) => (
+                    <button
+                      key={index}
+                      onClick={() => toggleWeekDay(index, true)}
+                      className={`px-3 py-2 rounded ${exerciseForm.weekDays.includes(index) ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button onClick={addExercise} className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                추가
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* 날짜 상세 모달 */}
+      {dayDetailModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">
+                {selectedDayDate && `${selectedDayDate.getMonth() + 1}월 ${selectedDayDate.getDate()}일`}
+              </h3>
+              <button onClick={() => setDayDetailModalOpen(false)} className="p-1 hover:bg-gray-100 rounded">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {selectedDayEvents.length === 0 ? (
+                <p className="text-center py-8 text-gray-400">일정이 없습니다</p>
+              ) : (
+                selectedDayEvents.map(event => {
+                  const eventColor = event.isAnniversary 
+                    ? getAnniversaryColor(event.anniversaryType)
+                    : categories[event.category]?.hexColor || '#6b7280';
+                  
+                  return (
+                    <div key={event.id} className="p-4 border-l-4 border rounded-lg" style={{ borderLeftColor: eventColor }}>
+                      <div className="font-medium" style={{ color: eventColor }}>
+                        {event.title}
+                      </div>
+                      {event.description && (
+                        <div className="text-sm text-gray-600 mt-1">{event.description}</div>
+                      )}
+                      {event.time && (
+                        <div className="text-xs text-gray-500 mt-1">⏰ {event.time}</div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
