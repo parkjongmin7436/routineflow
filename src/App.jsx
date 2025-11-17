@@ -444,85 +444,43 @@ const getLunarDate = (date) => {
   // ============================================
   // 🔧 캘린더 함수들
   // ============================================
-  const getDaysInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-    const days = [];
-    
-    for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
-    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
-    
-    return days;
-  };
+  const addAnniversary = () => {
+  if (anniversaryType === 'dday') {
+    if (!anniversaryForm.name || !anniversaryForm.date) {
+      alert('이름과 날짜를 입력해주세요');
+      return;
+    }
+    setAnniversaries({ 
+      ...anniversaries, 
+      ddays: [...anniversaries.ddays, { id: Date.now(), ...anniversaryForm }] 
+    });
+    alert('D-Day가 추가되었습니다!');
+  } else if (anniversaryType === 'couple') {
+    if (!coupleForm.startDate || coupleForm.cycles.length === 0) {
+      alert('사귄 날짜와 표시 주기를 선택해주세요');
+      return;
+    }
+    setAnniversaries({ ...anniversaries, couple: coupleForm });
+    alert('커플 기념일이 저장되었습니다!');
+  } else if (anniversaryType === 'birthday') {
+    if (!anniversaryForm.name || !anniversaryForm.date) {
+      alert('이름과 날짜를 입력해주세요');
+      return;
+    }
+    setAnniversaries({ 
+      ...anniversaries, 
+      birthdays: [...anniversaries.birthdays, { id: Date.now(), ...anniversaryForm }] 
+    });
+    alert('생일이 추가되었습니다!');
+  }
   
-  const getAllDatesInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const lastDay = new Date(year, month + 1, 0).getDate();
-    const dates = [];
-    for (let i = 1; i <= lastDay; i++) dates.push(new Date(year, month, i));
-    return dates;
-  };
+  // 폼 초기화
+  setAnniversaryForm({ name: '', date: '', lunar: false });
+  setCoupleForm({ startDate: '', cycles: [] });
   
-  const getEventsForDate = (date) => {
-    if (!date) return [];
-    const dateStr = formatDate(date);
-    
-    const regularEvents = events.filter(e => e.date === dateStr);
-    
-    const ddayEvents = anniversaries.ddays
-      .filter(d => d.date === dateStr)
-      .map(d => ({
-        id: `dday_${d.id}`,
-        title: `📌 ${d.name}`,
-        date: d.date,
-        category: 'etc',
-        isAnniversary: true,
-        anniversaryType: 'dday'
-      }));
-    
-    const birthdayEvents = anniversaries.birthdays
-      .filter(b => {
-        const bDate = new Date(b.date);
-        return bDate.getMonth() === date.getMonth() && bDate.getDate() === date.getDate();
-      })
-      .map(b => ({
-        id: `birthday_${b.id}`,
-        title: `🎂 ${b.name}`,
-        date: dateStr,
-        category: 'etc',
-        isAnniversary: true,
-        anniversaryType: 'birthday'
-      }));
-    
-    const coupleDates = calculateCoupleDates();
-    const coupleEvents = (coupleDates[dateStr] || []).map((evt, idx) => ({
-      id: `couple_${dateStr}_${idx}`,
-      title: evt.text,
-      date: dateStr,
-      category: 'etc',
-      isAnniversary: true,
-      anniversaryType: 'couple'
-    }));
-    
-    return [...regularEvents, ...ddayEvents, ...birthdayEvents, ...coupleEvents];
-  };
-  
-  const getAnniversaryColor = (anniversaryType) => {
-    return ANNIVERSARY_COLORS[anniversaryType] || '#6b7280';
-  };
-  
-  const handleDayClick = (day) => {
-    setSelectedDate(day);
-    const dayEvents = getEventsForDate(day);
-    setSelectedDayEvents(dayEvents);
-    setSelectedDayDate(day);
-    setDayDetailModalOpen(true);
-  };
+  // 모달 닫기
+  setAnniversaryModalOpen(false);
+};
   // ============================================
   // 🔧 카테고리 함수들
   // ============================================
