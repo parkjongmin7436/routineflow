@@ -663,13 +663,30 @@ useEffect(() => {
   };
   
   const deleteItem = (type, id) => {
-    if (type === 'event') setEvents(events.filter(e => e.id !== id));
-    else if (type === 'routine') setRoutines(routines.filter(r => r.id !== id));
-    else if (type === 'todo') setTodos(todos.filter(t => t.id !== id));
-    else if (type === 'completed') setCompletedTodos(completedTodos.filter(t => t.id !== id));
-    else if (type === 'exercise') setExercises(exercises.filter(e => e.id !== id));
-    setOpenMenuId(null);
-  };
+  if (type === 'event') {
+    setEvents(events.filter(e => e.id !== id));
+  } 
+  else if (type === 'routine') {
+    // 루틴 삭제
+    setRoutines(routines.filter(r => r.id !== id));
+    // 해당 루틴에서 생성된 할일도 삭제
+    setTodos(todos.filter(t => !(t.isFromRoutine && t.sourceRoutineId === id)));
+  } 
+  else if (type === 'todo') {
+    setTodos(todos.filter(t => t.id !== id));
+  } 
+  else if (type === 'completed') {
+    setCompletedTodos(completedTodos.filter(t => t.id !== id));
+  } 
+  else if (type === 'exercise') {
+    // 운동 삭제
+    setExercises(exercises.filter(e => e.id !== id));
+    // 해당 운동에서 생성된 할일도 삭제
+    const exerciseRoutineId = `exercise_${id}`;
+    setTodos(todos.filter(t => !(t.isFromRoutine && t.sourceRoutineId === exerciseRoutineId)));
+  }
+  setOpenMenuId(null);
+};
   
   const sortTodosByPriority = (todoList) => {
     const priorityOrder = { high: 1, medium: 2, low: 3 };
